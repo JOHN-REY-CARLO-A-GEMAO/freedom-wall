@@ -34,13 +34,27 @@ export const useModeration = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to check content');
+        try {
+          const errorBody = await response.json();
+          if (errorBody && (errorBody.message || errorBody.error)) {
+            throw new Error(errorBody.message || errorBody.error);
+          } else {
+            throw new Error(`Moderation request failed: Status ${response.status}`);
+          }
+        } catch (e) {
+          // If parsing JSON fails or it's not a JSON error response
+          if (e instanceof Error && (e.message.includes("Moderation request failed") || e.message !== 'Failed to check content')) {
+            throw e; // rethrow the specific error from above
+          }
+          throw new Error(`Moderation request failed: Status ${response.status}`);
+        }
       }
 
       const result = await response.json();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to moderate content');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during content moderation.';
+      setError(errorMessage);
       return null;
     } finally {
       setIsChecking(false);
