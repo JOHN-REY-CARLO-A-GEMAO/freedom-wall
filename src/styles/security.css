@@ -1,0 +1,68 @@
+/* Prevent element inspection */
+*::before,
+*::after {
+  display: none !important;
+}
+
+/* Prevent text selection */
+.secure-content {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Hide content when dev tools are open */
+.dev-tools-protection {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+/* Dynamic overlay for screenshot protection */
+.screenshot-protection {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.01);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Responsive image container */
+.secure-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 640px) {
+  .secure-image-container {
+    margin: 0 -1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .secure-image-container {
+    margin: 0 auto;
+    max-width: 90%;
+  }
+}
+
+@media (min-width: 1025px) {
+  .secure-image-container {
+    margin: 0 auto;
+    max-width: 80%;
+  }
+}
+
+/* Lazy loading styles */
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
