@@ -135,16 +135,21 @@ export const useConfessions = () => {
   const supportConfession = async (confessionId: string) => {
     try {
       // Get the current confession
-      const { data: confession, error: fetchError } = await supabase
+      const { data: confessionsData, error: fetchError } = await supabase
         .from('confessions')
         .select('support_count')
         .eq('id', confessionId)
-        .single();
+        .limit(1);
 
       if (fetchError) throw fetchError;
+      
+      const confession = confessionsData?.[0];
+      if (!confession) {
+        throw new Error('Confession not found');
+      }
 
       // Calculate new support count
-      const newCount = (confession?.support_count || 0) + 1;
+      const newCount = (confession.support_count || 0) + 1;
 
       // Update the confession with new count
       const { error: updateError } = await supabase
@@ -170,16 +175,21 @@ export const useConfessions = () => {
   const supportComment = async (confessionId: string, commentId: string) => {
     try {
       // Get the current comment
-      const { data: comment, error: fetchError } = await supabase
+      const { data: commentsData, error: fetchError } = await supabase
         .from('comments')
         .select('support_count')
         .eq('id', commentId)
-        .single();
+        .limit(1);
 
       if (fetchError) throw fetchError;
 
+      const comment = commentsData?.[0];
+      if (!comment) {
+        throw new Error('Comment not found');
+      }
+
       // Calculate new support count
-      const newCount = (comment?.support_count || 0) + 1;
+      const newCount = (comment.support_count || 0) + 1;
 
       // Update the comment with new count
       const { error: updateError } = await supabase
