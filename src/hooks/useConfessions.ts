@@ -134,7 +134,7 @@ export const useConfessions = () => {
   // Support a confession
   const supportConfession = async (confessionId: string) => {
     try {
-      // First, get the current confession
+      // Get the current confession
       const { data: confession, error: fetchError } = await supabase
         .from('confessions')
         .select('support_count')
@@ -144,7 +144,7 @@ export const useConfessions = () => {
       if (fetchError) throw fetchError;
 
       // Calculate new support count
-      const newCount = (confession.support_count || 0) + 1;
+      const newCount = (confession?.support_count || 0) + 1;
 
       // Update the confession with new count
       const { error: updateError } = await supabase
@@ -169,7 +169,7 @@ export const useConfessions = () => {
   // Support a comment
   const supportComment = async (confessionId: string, commentId: string) => {
     try {
-      // First, get the current comment
+      // Get the current comment
       const { data: comment, error: fetchError } = await supabase
         .from('comments')
         .select('support_count')
@@ -179,7 +179,7 @@ export const useConfessions = () => {
       if (fetchError) throw fetchError;
 
       // Calculate new support count
-      const newCount = (comment.support_count || 0) + 1;
+      const newCount = (comment?.support_count || 0) + 1;
 
       // Update the comment with new count
       const { error: updateError } = await supabase
