@@ -43,32 +43,37 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
       // Check content before submitting
       const moderationResult = await checkContent(content);
 
-      if (!moderationResult) {
-        throw new Error('Content moderation failed');
-      }
+      // The checkContent hook now throws an error if the API call itself fails,
+      // so we don't need to check for !moderationResult here.
+      // That error will be caught by the catch block below.
 
-      if (!moderationResult.isApproved) {
-        setModerationError(moderationResult.message || 'Content not allowed');
-        return;
+      if (moderationResult && !moderationResult.isApproved) {
+        setModerationError(moderationResult.message || 'Content not allowed by moderation policy.');
+        // Do not return here, let finally setIsSubmitting(false) execute
+      } else if (moderationResult && moderationResult.isApproved) {
+        // Content approved, proceed with submission
+        onAddConfession(
+          content,
+          category,
+          hasTriggerWarning,
+          hasTriggerWarning ? triggerWarningText : undefined,
+          imageUrl
+        );
+
+        // Reset form
+        setContent('');
+        setCategory('academics');
+        setHasTriggerWarning(false);
+        setTriggerWarningText('');
+        setImageUrl(undefined);
       }
+      // If moderationResult is null, it means an error was thrown by checkContent and caught below.
+      // If moderationResult.isApproved is false, we've set the error and will fall through to finally.
       
-      // Content approved, proceed with submission
-      onAddConfession(
-        content, 
-        category, 
-        hasTriggerWarning, 
-        hasTriggerWarning ? triggerWarningText : undefined,
-        imageUrl
-      );
-      
-      // Reset form
-      setContent('');
-      setCategory('academics');
-      setHasTriggerWarning(false);
-      setTriggerWarningText('');
-      setImageUrl(undefined);
     } catch (error) {
-      setModerationError(error instanceof Error ? error.message : 'Failed to submit confession');
+      // This will catch errors thrown by checkContent (e.g., network, API error)
+      // or any other unexpected errors during the submission process.
+      setModerationError(error instanceof Error ? error.message : 'Failed to submit confession due to an unexpected error.');
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +189,7 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
         <Button 
           type="submit" 
           isLoading={isSubmitting || isChecking}
-          disabled={!content.trim() || isSubmitting || isChecking}
+          disabled={!content.trim() || isSubmitting || isChecking || !!moderationError}
         >
           Share Anonymously
         </Button>
