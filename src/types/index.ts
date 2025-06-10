@@ -1,7 +1,7 @@
 export interface Confession {
   id: string;
   content: string;
-  category: Category;
+  hashtags: string[];
   createdAt: Date;
   expiresAt: Date;
   hasTriggerWarning: boolean;
@@ -19,18 +19,8 @@ export interface Comment {
   supportCount: number;
 }
 
-export type Category = 
-  | 'procrastination'
-  | 'food-adventures'
-  | 'nap-expertise'
-  | 'awkward-moments'
-  | 'campus-legends'
-  | 'future-plans'
-  | 'random';
-
-export interface CategoryInfo {
-  value: Category;
-  label: string;
-  description: string;
-  color: string;
+export interface HashtagInfo {
+  tag: string;
+  count: number;
+  trending: boolean;
 }

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Flag, AlertTriangle, MessageCircleHeart } from 'lucide-react';
 import { formatDistanceToNow } from '../utils/dateUtils';
+import { highlightHashtags } from '../utils/hashtagUtils';
 import { Confession } from '../types';
 import Button from './ui/Button';
-import CategoryBadge from './ui/CategoryBadge';
+import HashtagBadge from './ui/HashtagBadge';
 import CommentList from './CommentList';
 import CommentForm from './CommentForm';
 import SupportMessageForm from './SupportMessageForm';
@@ -15,6 +16,7 @@ interface ConfessionCardProps {
   onAddComment: (id: string, content: string) => void;
   onSupportComment: (confessionId: string, commentId: string) => void;
   onReport: (id: string) => void;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
 const ConfessionCard: React.FC<ConfessionCardProps> = ({
@@ -23,6 +25,7 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({
   onAddComment,
   onSupportComment,
   onReport,
+  onHashtagClick,
 }) => {
   const [showComments, setShowComments] = useState(false);
   const [showTriggerWarning, setShowTriggerWarning] = useState(!confession.hasTriggerWarning);
@@ -63,6 +66,12 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({
     }
   };
 
+  const handleHashtagClick = (hashtag: string) => {
+    if (onHashtagClick) {
+      onHashtagClick(hashtag);
+    }
+  };
+
   // Get the time until expiration
   const timeRemaining = formatDistanceToNow(confession.expiresAt);
 
@@ -94,15 +103,27 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({
       {showTriggerWarning && (
         <div className="p-3 sm:p-4">
           <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
-            <CategoryBadge category={confession.category} size="sm" />
+            <div className="flex flex-wrap gap-1">
+              {confession.hashtags && confession.hashtags.length > 0 && (
+                confession.hashtags.map((hashtag) => (
+                  <HashtagBadge
+                    key={hashtag}
+                    hashtag={hashtag}
+                    size="sm"
+                    onClick={handleHashtagClick}
+                  />
+                ))
+              )}
+            </div>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               Expires in {timeRemaining}
             </span>
           </div>
           
-          <p className="text-gray-800 dark:text-gray-200 mb-4 font-serif text-sm sm:text-base leading-relaxed">
-            {confession.content}
-          </p>
+          <div 
+            className="text-gray-800 dark:text-gray-200 mb-4 font-serif text-sm sm:text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: highlightHashtags(confession.content) }}
+          />
 
           {confession.imageUrl && (
             <div className="mb-4 secure-image-container">

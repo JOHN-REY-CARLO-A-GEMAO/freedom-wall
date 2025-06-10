@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Confession, Category, Comment } from '../types';
+import { Confession, Comment } from '../types';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -27,11 +27,12 @@ export const useConfessions = () => {
 
         if (fetchError) throw fetchError;
 
-        // Transform dates from strings to Date objects
+        // Transform dates from strings to Date objects and parse hashtags
         const transformedData = data.map(confession => ({
           ...confession,
           createdAt: new Date(confession.created_at),
           expiresAt: new Date(confession.expires_at),
+          hashtags: confession.hashtags || [],
           comments: confession.comments.map((comment: any) => ({
             ...comment,
             createdAt: new Date(comment.created_at)
@@ -77,7 +78,7 @@ export const useConfessions = () => {
   // Add a new confession
   const addConfession = async (
     content: string,
-    category: Category,
+    hashtags: string[],
     hasTriggerWarning: boolean = false,
     triggerWarningText?: string,
     imageUrl?: string
@@ -91,7 +92,7 @@ export const useConfessions = () => {
         .from('confessions')
         .insert([{
           content,
-          category,
+          hashtags,
           has_trigger_warning: hasTriggerWarning,
           trigger_warning_text: triggerWarningText,
           image_url: imageUrl,
@@ -236,19 +237,25 @@ export const useConfessions = () => {
     }
   };
 
-  // Filter confessions by category
-  const filterByCategory = (category: Category | null) => {
-    if (!category) return confessions;
-    return confessions.filter(confession => confession.category === category);
+  // Filter confessions by hashtag
+  const filterByHashtag = (hashtag: string | null) => {
+    if (!hashtag) return confessions;
+    return confessions.filter(confession => 
+      confession.hashtags && confession.hashtags.includes(hashtag)
+    );
   };
 
-  // Search confessions by content
+  // Search confessions by content or hashtags
   const searchConfessions = (searchTerm: string) => {
     if (!searchTerm.trim()) return confessions;
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return confessions.filter(
-      confession => confession.content.toLowerCase().includes(lowerCaseSearchTerm)
-    );
+    return confessions.filter(confession => {
+      const contentMatch = confession.content.toLowerCase().includes(lowerCaseSearchTerm);
+      const hashtagMatch = confession.hashtags && confession.hashtags.some(tag => 
+        tag.toLowerCase().includes(lowerCaseSearchTerm.replace('#', ''))
+      );
+      return contentMatch || hashtagMatch;
+    });
   };
 
   return {
@@ -260,7 +267,7 @@ export const useConfessions = () => {
     supportConfession,
     supportComment,
     reportConfession,
-    filterByCategory,
+    filterByHashtag,
     searchConfessions,
   };
 };
