@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Category } from '../types';
-import { CATEGORIES } from '../data/mockData';
 import { useModeration } from '../hooks/useModeration';
+import { extractHashtags } from '../utils/hashtagUtils';
 import Button from './ui/Button';
 import SecureImageUpload from './SecureImageUpload';
+import HashtagInput from './HashtagInput';
 
 interface ConfessionFormProps {
   onAddConfession: (
     content: string, 
-    category: Category, 
+    hashtags: string[],
     hasTriggerWarning: boolean, 
     triggerWarningText?: string,
     imageUrl?: string
@@ -22,7 +22,6 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
   onCancel 
 }) => {
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<Category>('academics');
   const [hasTriggerWarning, setHasTriggerWarning] = useState(false);
   const [triggerWarningText, setTriggerWarningText] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -43,18 +42,16 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
       // Check content before submitting
       const moderationResult = await checkContent(content);
 
-      // The checkContent hook now throws an error if the API call itself fails,
-      // so we don't need to check for !moderationResult here.
-      // That error will be caught by the catch block below.
-
       if (moderationResult && !moderationResult.isApproved) {
         setModerationError(moderationResult.message || 'Content not allowed by moderation policy.');
-        // Do not return here, let finally setIsSubmitting(false) execute
       } else if (moderationResult && moderationResult.isApproved) {
+        // Extract hashtags from content
+        const hashtags = extractHashtags(content);
+        
         // Content approved, proceed with submission
         onAddConfession(
           content,
-          category,
+          hashtags,
           hasTriggerWarning,
           hasTriggerWarning ? triggerWarningText : undefined,
           imageUrl
@@ -62,17 +59,12 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
 
         // Reset form
         setContent('');
-        setCategory('academics');
         setHasTriggerWarning(false);
         setTriggerWarningText('');
         setImageUrl(undefined);
       }
-      // If moderationResult is null, it means an error was thrown by checkContent and caught below.
-      // If moderationResult.isApproved is false, we've set the error and will fall through to finally.
       
     } catch (error) {
-      // This will catch errors thrown by checkContent (e.g., network, API error)
-      // or any other unexpected errors during the submission process.
       setModerationError(error instanceof Error ? error.message : 'Failed to submit confession due to an unexpected error.');
     } finally {
       setIsSubmitting(false);
@@ -89,19 +81,12 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
         <label htmlFor="confession-content" className="block text-sm font-medium text-gray-700 mb-1">
           Share your thoughts anonymously
         </label>
-        <textarea
-          id="confession-content"
-          rows={4}
-          className="w-full rounded-md border border-gray-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 font-serif"
-          placeholder="What's on your mind? Your confession is completely anonymous..."
+        <HashtagInput
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={setContent}
+          placeholder="What's on your mind? Use #hashtags to categorize your story! #dormlife #procrastination #foodie"
           maxLength={1000}
-          required
         />
-        <div className="mt-1 text-xs text-gray-500 flex justify-end">
-          {content.length}/1000 characters
-        </div>
       </div>
 
       <div>
@@ -116,24 +101,6 @@ const ConfessionForm: React.FC<ConfessionFormProps> = ({
           <p className="text-sm text-red-600">{moderationError}</p>
         </div>
       )}
-
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-          Category
-        </label>
-        <select
-          id="category"
-          className="w-full rounded-md border border-gray-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as Category)}
-        >
-          {Object.values(CATEGORIES).map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label} - {cat.description}
-            </option>
-          ))}
-        </select>
-      </div>
 
       <div className="bg-gray-50 p-3 rounded-md">
         <div className="flex items-start">

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useConfessions } from '../hooks/useConfessions';
-import { Category } from '../types';
 import Header from '../components/Header';
 import ConfessionForm from '../components/ConfessionForm';
 import ConfessionsList from '../components/ConfessionsList';
@@ -19,20 +18,20 @@ const HomePage: React.FC = () => {
     supportConfession,
     supportComment,
     reportConfession,
-    filterByCategory,
+    filterByHashtag,
     searchConfessions,
   } = useConfessions();
 
   const [filteredConfessions, setFilteredConfessions] = useState(confessions);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const [activeHashtag, setActiveHashtag] = useState<string | null>(null);
   const [showNewConfessionForm, setShowNewConfessionForm] = useState(false);
 
   useEffect(() => {
     let results = confessions;
     
-    if (activeCategory) {
-      results = filterByCategory(activeCategory);
+    if (activeHashtag) {
+      results = filterByHashtag(activeHashtag);
     }
     
     if (searchTerm) {
@@ -40,26 +39,31 @@ const HomePage: React.FC = () => {
     }
     
     setFilteredConfessions(results);
-  }, [confessions, searchTerm, activeCategory]);
+  }, [confessions, searchTerm, activeHashtag]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
 
-  const handleFilterByCategory = (category: Category | null) => {
-    setActiveCategory(category);
+  const handleFilterByHashtag = (hashtag: string | null) => {
+    setActiveHashtag(hashtag);
   };
 
   const handleAddConfession = (
     content: string, 
-    category: Category, 
+    hashtags: string[],
     hasTriggerWarning: boolean, 
     triggerWarningText?: string
   ) => {
-    addConfession(content, category, hasTriggerWarning, triggerWarningText);
+    addConfession(content, hashtags, hasTriggerWarning, triggerWarningText);
     setShowNewConfessionForm(false);
     setSearchTerm('');
-    setActiveCategory(null);
+    setActiveHashtag(null);
+  };
+
+  const handleHashtagClick = (hashtag: string) => {
+    setActiveHashtag(hashtag);
+    setSearchTerm('');
   };
 
   return (
@@ -108,9 +112,10 @@ const HomePage: React.FC = () => {
 
               <FilterBar 
                 onSearch={handleSearch}
-                onFilterByCategory={handleFilterByCategory}
+                onFilterByHashtag={handleFilterByHashtag}
                 searchTerm={searchTerm}
-                activeCategory={activeCategory}
+                activeHashtag={activeHashtag}
+                confessions={confessions}
               />
             </div>
 
@@ -121,6 +126,7 @@ const HomePage: React.FC = () => {
               onAddComment={addComment}
               onSupportComment={supportComment}
               onReport={reportConfession}
+              onHashtagClick={handleHashtagClick}
             />
           </div>
 

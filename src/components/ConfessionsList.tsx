@@ -9,6 +9,7 @@ interface ConfessionsListProps {
   onAddComment: (id: string, content: string) => void;
   onSupportComment: (confessionId: string, commentId: string) => void;
   onReport: (id: string) => void;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
 const ConfessionsList: React.FC<ConfessionsListProps> = ({
@@ -18,6 +19,7 @@ const ConfessionsList: React.FC<ConfessionsListProps> = ({
   onAddComment,
   onSupportComment,
   onReport,
+  onHashtagClick,
 }) => {
   if (isLoading) {
     return (
@@ -53,7 +55,7 @@ const ConfessionsList: React.FC<ConfessionsListProps> = ({
     return (
       <div className="py-10 text-center">
         <p className="text-lg text-gray-600">No confessions found.</p>
-        <p className="text-gray-500 mt-2">Be the first to share your thoughts!</p>
+        <p className="text-gray-500 mt-2">Be the first to share your thoughts with hashtags!</p>
       </div>
     );
   }
@@ -68,6 +70,7 @@ const ConfessionsList: React.FC<ConfessionsListProps> = ({
           onAddComment={onAddComment}
           onSupportComment={onSupportComment}
           onReport={onReport}
+          onHashtagClick={onHashtagClick}
         />
       ))}
     </div>
